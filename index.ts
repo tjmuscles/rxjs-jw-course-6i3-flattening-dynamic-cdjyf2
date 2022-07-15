@@ -1,5 +1,5 @@
-import { fromEvent } from "rxjs";
-import { map, concatMap, tap } from 'rxjs/operators';
+import { EMPTY, fromEvent, of } from "rxjs";
+import { map, concatMap, tap, catchError } from 'rxjs/operators';
 import { ajax } from 'rxjs/ajax';
 
 const endpointInput: HTMLInputElement = document.querySelector('input#endpoint');
@@ -10,8 +10,12 @@ fromEvent(fetchButton, 'click')
   map(() => endpointInput.value),
   concatMap(value => 
     ajax(`https://random-data-api.com/api/${value}/random_${value}`)
+    .pipe(catchError(error => of(`Could not fetch data: ${error}`))
+    )
   )
 )
-.subscribe(
-  value => console.log(value)
-);
+.subscribe({
+  next: value => console.log(value),
+  error: err => console.log('Error: ', err),
+  complete: () => console.log('COMPLETED')
+});
